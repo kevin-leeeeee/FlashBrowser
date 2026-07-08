@@ -7,70 +7,97 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:orientation="horizontal"
-            android:padding="4dp"
-            android:background="#eeeeee"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:gravity="center_vertical"
             app:layout_scrollFlags="scroll|enterAlways">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:text="◀"
-                style="?android:attr/buttonStyleSmall" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_back"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="上一頁" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnForward"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:text="▶"
-                style="?android:attr/buttonStyleSmall" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_forward"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="下一頁" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnHome"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:text="🏠"
-                style="?android:attr/buttonStyleSmall" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_home"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="首頁" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnReload"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:text="🔄"
-                style="?android:attr/buttonStyleSmall" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_refresh"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="重新整理" />
 
             <EditText
                 android:id="@+id/urlInput"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="38dp"
                 android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_url_input"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:hint="輸入網址..."
                 android:inputType="textUri"
                 android:maxLines="1"
-                android:textSize="14sp" />
+                android:textSize="13sp"
+                android:textColor="#333333"
+                android:textColorHint="#999999" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnZoomOut"
-                android:layout_width="45dp"
-                android:layout_height="wrap_content"
-                android:text="🔍-"
-                style="?android:attr/buttonStyleSmall" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_zoom_out"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="縮小網頁" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/btnZoomIn"
-                android:layout_width="45dp"
-                android:layout_height="wrap_content"
-                android:text="🔍+"
-                style="?android:attr/buttonStyleSmall" />
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_zoom_in"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="放大網頁" />
 
         </LinearLayout>
+
+        <!-- 加入一條精細的底部分割線 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <WebView

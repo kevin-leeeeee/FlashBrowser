@@ -9,7 +9,7 @@ import android.view.ViewConfiguration
 import android.view.inputmethod.EditorInfo
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.AppBarLayout
@@ -18,12 +18,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var urlInput: EditText
-    private lateinit var btnBack: Button
-    private lateinit var btnForward: Button
-    private lateinit var btnHome: Button
-    private lateinit var btnReload: Button
-    private lateinit var btnZoomIn: Button
-    private lateinit var btnZoomOut: Button
+    private lateinit var btnBack: ImageButton
+    private lateinit var btnForward: ImageButton
+    private lateinit var btnHome: ImageButton
+    private lateinit var btnReload: ImageButton
+    private lateinit var btnZoomIn: ImageButton
+    private lateinit var btnZoomOut: ImageButton
     private val homeUrl = "https://tdsheep.tdsheepvillage.com/"
     private var currentZoom = 1.0f
     private lateinit var sharedPreferences: android.content.SharedPreferences
