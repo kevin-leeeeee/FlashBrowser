@@ -40,6 +40,12 @@
 
 ---
 
+## ⚠️ 已知問題 (Known Issues)
+
+* **頭像無法顯示**：由於 Ruffle 模擬器目前不支援部分頭像載入，為了避免影響遊戲的順暢度與效能，系統目前已主動關閉頭像載入。這不影響遊戲（如派狼戰鬥等）的正常運作。
+
+---
+
 ## 🛠️ 常見問題 (FAQ)
 
 **Q1：為什麼遊戲畫面顯示空白或中文字變亂碼？**
@@ -50,4 +56,4 @@ A2：本 APP 僅作為 Flash 遊戲執行環境與必要的網路通訊優化，
 
 ---
 
-> 💡 **給開發者**：如果您需要查看技術細節、代碼架構或自行修改預設網址，請參考 [DEVELOPER.md](file:///c:/Users/HP_600_G1_2ND/Desktop/FlashBrowser/DEVELOPER.md)。
+> 💡 **給開發者**：如果您需要查看技術細節、代碼架構或自行修改預設網址，請參考 [DEVELOPER.md](https://github.com/kevin-leeeeee/FlashBrowser/blob/main/DEVELOPER.md)。

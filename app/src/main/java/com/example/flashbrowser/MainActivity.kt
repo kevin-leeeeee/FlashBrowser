@@ -79,6 +79,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: android.webkit.WebResourceRequest?
+            ): android.webkit.WebResourceResponse? {
+                val url = request?.url?.toString() ?: ""
+                // 阻擋 favicon (網頁頭像) 載入以增進效能
+                if (url.endsWith("favicon.ico")) {
+                    return android.webkit.WebResourceResponse("image/png", null, null)
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 url?.let { urlInput.setText(it) }
@@ -123,7 +135,6 @@ class MainActivity : AppCompatActivity() {
                         const OriginalWebSocket = window.WebSocket;
                         const WebSocketProxy = function(url, protocols) {
                             const ws = new OriginalWebSocket(url, protocols);
-                            console.log("[FLASH_DEBUG] Socket connected to: " + url);
                             
                             const originalSend = ws.send;
                             ws.send = function(data) {
@@ -136,7 +147,6 @@ class MainActivity : AppCompatActivity() {
                                     detail = String(data);
                                 }
                                 detail = detail.replace(/\0/g, '');
-                                console.log("[FLASH_DEBUG] Socket Send: " + detail);
                                 return originalSend.apply(this, arguments);
                             };
 
@@ -150,7 +160,6 @@ class MainActivity : AppCompatActivity() {
                                     detail = String(event.data);
                                 }
                                 detail = detail.replace(/\0/g, '');
-                                console.log("[FLASH_DEBUG] Socket Recv: " + detail);
                             });
 
                             return ws;
@@ -161,10 +170,12 @@ class MainActivity : AppCompatActivity() {
                         // 2. 攔截 XMLHttpRequest (用於 HTTP POST/AMF3)
                         const originalOpen = XMLHttpRequest.prototype.open;
                         const originalSend = XMLHttpRequest.prototype.send;
-                        
-                        XMLHttpRequest.prototype.open = function(method, url) {
-                            this._method = method;
-                            this._url = url;
+                        XMLHttpRequest.prototype.open = function() {
+                            if (arguments[1] && typeof arguments[1] === 'string' && arguments[1].includes('avatar')) {
+                                arguments[1] = "about:blank"; // 放棄頭像載入
+                            }
+                            this._url = arguments[1];
+                            this._method = arguments[0];
                             return originalOpen.apply(this, arguments);
                         };
                         
@@ -175,32 +186,23 @@ class MainActivity : AppCompatActivity() {
                             if (data) {
                                 if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
                                     const buf = data.buffer || data;
-                                    console.log("[FLASH_DEBUG] XHR Send Binary to: " + reqUrl + " | Size: " + buf.byteLength + " bytes | Text Dump: " + binaryToAscii(buf));
-                                    console.log("[FLASH_DEBUG] XHR Send Hex to: " + reqUrl + " | Hex: " + toHex(buf));
                                 } else if (data instanceof Blob) {
                                     const reader = new FileReader();
                                     const self = this;
                                     reader.onload = function() {
-                                        console.log("[FLASH_DEBUG] XHR Send Blob to: " + reqUrl + " | Size: " + data.size + " bytes | Text Dump: " + binaryToAscii(reader.result));
-                                        console.log("[FLASH_DEBUG] XHR Send Hex to: " + reqUrl + " | Hex: " + toHex(reader.result));
                                     };
                                     reader.readAsArrayBuffer(data);
                                 } else {
-                                    console.log("[FLASH_DEBUG] XHR Send Text to: " + reqUrl + " | Data: " + String(data));
                                 }
                             } else {
-                                console.log("[FLASH_DEBUG] XHR Send to: " + reqUrl + " | (No Body)");
                             }
 
                             this.addEventListener('load', () => {
                                 try {
                                     if (this.responseType === 'arraybuffer' || this.responseType === 'blob') {
-                                        console.log("[FLASH_DEBUG] XHR Recv Binary from: " + reqUrl);
                                     } else {
-                                        console.log("[FLASH_DEBUG] XHR Recv Text from: " + reqUrl + " | Resp: " + this.responseText.substring(0, 300));
                                     }
                                 } catch(e) {
-                                    console.log("[FLASH_DEBUG] XHR Recv Error: " + e.message);
                                 }
                             });
 
@@ -454,7 +456,6 @@ class MainActivity : AppCompatActivity() {
                                 let version = (view[pos++] << 8) | view[pos++];
                                 let headerCount = (view[pos++] << 8) | view[pos++];
                                 if (headerCount > 0) {
-                                    console.log("[FLASH_DEBUG] Warning: AMF0 headers present. Count: " + headerCount);
                                     // Cannot easily skip AMF0 headers without a full AMF0 parser, but let's hope there are none.
                                 }
                                 let msgCount = (view[pos++] << 8) | view[pos++];
@@ -466,7 +467,6 @@ class MainActivity : AppCompatActivity() {
                                 let bodyLenPos = pos;
                                 pos += 4; // body length
                                 
-                                console.log("[FLASH_DEBUG] AMF0 Parser at pos: " + pos + ", next byte: " + view[pos]);
                                 
                                 // AMF0 呼叫的參數會被封裝在一個 Strict Array (0x0A) 中，後面接著 4 位元組的陣列長度 (通常為 1)
                                 let amf0ArrayMarker = view[pos];
@@ -476,7 +476,6 @@ class MainActivity : AppCompatActivity() {
                                 
                                 let amf3Marker = view[pos];
                                 if (amf3Marker !== 0x11) {
-                                    console.log("[FLASH_DEBUG] Not AMF3 transition marker: " + amf3Marker + " at pos " + pos);
                                     return buffer;
                                 }
                                 pos += 1;
@@ -513,10 +512,8 @@ class MainActivity : AppCompatActivity() {
                                 // 寫入新 AMF3 資料
                                 newPacket.set(newAmf3Bytes, bodyLenPos + 10);
 
-                                console.log("[FLASH_DEBUG] AMF3 Packet patched! Size: " + buffer.byteLength + " -> " + newPacket.byteLength);
                                 return newPacket.buffer;
                             } catch(e) {
-                                console.log("[FLASH_DEBUG] patchAMF3Request error: " + e.message);
                                 return buffer;
                             }
                         }
@@ -548,7 +545,6 @@ class MainActivity : AppCompatActivity() {
                                     if (pos === -1) continue;
                                     
                                     if (view[pos] === 0x08) { // ECMAArray
-                                        console.log("[FLASH_DEBUG] Found ECMAArray! Patching to Strict Array...");
                                         let arrLen = (view[pos+1] << 24) | (view[pos+2] << 16) | (view[pos+3] << 8) | view[pos+4];
                                         
                                         let newBuffer = new Uint8Array(buffer.byteLength);
@@ -579,7 +575,6 @@ class MainActivity : AppCompatActivity() {
                                                 newPos += valueLen;
                                                 oldPos += valueLen;
                                             } else {
-                                                console.log("[FLASH_DEBUG] Unknown array element type: " + type);
                                                 return buffer; // abort patching
                                             }
                                         }
@@ -588,7 +583,6 @@ class MainActivity : AppCompatActivity() {
                                         if (view[oldPos] === 0x00 && view[oldPos+1] === 0x00 && view[oldPos+2] === 0x09) {
                                             oldPos += 3;
                                         } else {
-                                            console.log("[FLASH_DEBUG] Missing ObjectEnd in ECMAArray");
                                         }
                                         
                                         let restLen = view.length - oldPos;
@@ -617,12 +611,10 @@ class MainActivity : AppCompatActivity() {
                                         
                                         buffer = finalBuffer.buffer;
                                         view = new Uint8Array(buffer);
-                                        console.log("[FLASH_DEBUG] Array patched! New size: " + buffer.byteLength);
                                     }
                                 }
                                 return buffer;
                             } catch(e) {
-                                console.log("[FLASH_DEBUG] patchAMF0Arrays error: " + e.message);
                                 return buffer;
                             }
                         }
@@ -641,6 +633,10 @@ class MainActivity : AppCompatActivity() {
                             } else if (resource) {
                                 reqUrl = String(resource);
                             }
+                            
+                            if (reqUrl.includes('avatar')) {
+                                return Promise.reject(new Error("Avatar loading abandoned for performance"));
+                            }
 
                             // 1. 如果是 Request 物件且發往 gateway/
                             if (resource && resource instanceof Request && resource.url.includes('/gateway/') && resource.method === 'POST') {
@@ -648,8 +644,6 @@ class MainActivity : AppCompatActivity() {
                                     try {
                                         const arrayBuffer = await resource.clone().arrayBuffer();
                                         if (arrayBuffer.byteLength > 0) {
-                                            console.log("[FLASH_DEBUG] Gateway POST Pre-patch Size: " + arrayBuffer.byteLength);
-                                            console.log("[FLASH_DEBUG] Gateway POST Pre-patch Hex: " + toHex(arrayBuffer));
                                         }
                                         let patchedBuffer = patchAMF3Request(arrayBuffer);
                                         if (patchedBuffer === arrayBuffer || patchedBuffer.byteLength === arrayBuffer.byteLength) {
@@ -658,10 +652,8 @@ class MainActivity : AppCompatActivity() {
                                         const newRequest = new Request(resource, {
                                             body: patchedBuffer
                                         });
-                                        console.log("[FLASH_DEBUG] Fetch patched (Request object) for: " + reqUrl);
                                         return originalFetch.call(window, newRequest, init);
                                     } catch(e) {
-                                        console.log("[FLASH_DEBUG] Fetch Request patch failed: " + e.message);
                                         return originalFetch.apply(this, arguments);
                                     }
                                 })();
@@ -681,23 +673,18 @@ class MainActivity : AppCompatActivity() {
                                         }
                                         
                                         if (arrayBuffer) {
-                                            console.log("[FLASH_DEBUG] Gateway POST Pre-patch Size: " + arrayBuffer.byteLength);
-                                            console.log("[FLASH_DEBUG] Gateway POST Pre-patch Hex: " + toHex(arrayBuffer));
                                             let patchedBuffer = patchAMF3Request(arrayBuffer);
                                             if (patchedBuffer === arrayBuffer || patchedBuffer.byteLength === arrayBuffer.byteLength) {
                                                 patchedBuffer = patchAMF0Arrays(patchedBuffer);
                                             }
                                             init.body = patchedBuffer;
-                                            console.log("[FLASH_DEBUG] Fetch patched (URL+Init) for: " + reqUrl);
                                         }
                                     } catch(e) {
-                                        console.log("[FLASH_DEBUG] Fetch Init patch failed: " + e.message);
                                     }
                                     return originalFetch.call(window, resource, init);
                                 })();
                             }
                             
-                            console.log("[FLASH_DEBUG] Fetch Send: " + reqMethod + " " + reqUrl);
 
                             // 非同步擷取請求 Body (唯獨記錄用)
                             if (resource && resource instanceof Request) {
@@ -705,43 +692,32 @@ class MainActivity : AppCompatActivity() {
                                     const clone = resource.clone();
                                     clone.arrayBuffer().then(buf => {
                                         if (buf.byteLength > 0) {
-                                            console.log("[FLASH_DEBUG] Fetch Body for " + reqUrl + " | Size: " + buf.byteLength + " bytes | Text: " + binaryToAscii(buf));
-                                            console.log("[FLASH_DEBUG] Fetch Body Hex for " + reqUrl + " | Hex: " + toHex(buf));
                                         }
                                     }).catch(e => {
-                                        console.log("[FLASH_DEBUG] Fetch Body Error: " + e.message);
                                     });
                                 } catch(e) {}
                             } else if (init && init.body) {
                                 let body = init.body;
                                 if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
                                     const buf = body.buffer || body;
-                                    console.log("[FLASH_DEBUG] Fetch Body for " + reqUrl + " | Size: " + buf.byteLength + " bytes | Text: " + binaryToAscii(buf));
-                                    console.log("[FLASH_DEBUG] Fetch Body Hex for " + reqUrl + " | Hex: " + toHex(buf));
                                 } else {
-                                    console.log("[FLASH_DEBUG] Fetch Body for " + reqUrl + " | Text: " + String(body));
                                 }
                             }
 
                             return originalFetch.apply(this, arguments).then(response => {
-                                console.log("[FLASH_DEBUG] Fetch Recv from: " + reqUrl + " | Status: " + response.status);
                                 try {
                                     const clone = response.clone();
                                     clone.arrayBuffer().then(buf => {
                                         if (buf.byteLength > 0) {
-                                            console.log("[FLASH_DEBUG] Fetch Response from " + reqUrl + " | Size: " + buf.byteLength + " bytes | Text: " + binaryToAscii(buf));
-                                            console.log("[FLASH_DEBUG] Fetch Response Hex from " + reqUrl + " | Hex: " + toHex(buf));
                                         }
                                     }).catch(e => {});
                                 } catch(e) {}
                                 return response;
                             }).catch(err => {
-                                console.log("[FLASH_DEBUG] Fetch Error: " + reqUrl + " | " + err.message);
                                 throw err;
                             });
                         };
 
-                        console.log("[FLASH_DEBUG] All network proxies (WS/XHR/Fetch) injected successfully.");
                     })();
                 """.trimIndent()
                 view?.evaluateJavascript(js, null)
@@ -904,7 +880,6 @@ class MainActivity : AppCompatActivity() {
                 const OriginalWebSocket = window.WebSocket;
                 const WebSocketProxy = function(url, protocols) {
                     const ws = new OriginalWebSocket(url, protocols);
-                    console.log("[FLASH_DEBUG] Socket connected to: " + url);
                     
                     const originalSend = ws.send;
                     ws.send = function(data) {
@@ -917,7 +892,6 @@ class MainActivity : AppCompatActivity() {
                             detail = String(data);
                         }
                         detail = detail.replace(/\0/g, '');
-                        console.log("[FLASH_DEBUG] Socket Send: " + detail);
                         return originalSend.apply(this, arguments);
                     };
 
@@ -931,7 +905,6 @@ class MainActivity : AppCompatActivity() {
                             detail = String(event.data);
                         }
                         detail = detail.replace(/\0/g, '');
-                        console.log("[FLASH_DEBUG] Socket Recv: " + detail);
                     });
 
                     return ws;
@@ -946,6 +919,7 @@ class MainActivity : AppCompatActivity() {
                 window.RufflePlayer.config = {
                     autoplay: "on",
                     unmuteOverlay: "hidden",
+                    splashScreen: false, // 關閉 Ruffle 頭像/啟動畫面
                     fontSources: ["https://cdn.jsdelivr.net/gh/lxgw/LxgwWenKai-Lite@main/fonts/TTF/LXGWWenKaiLite-Regular.ttf"],
                     defaultFonts: {
                         sans: ["LXGW WenKai Lite", "LXGW WenKai Lite Regular", "sans"],
