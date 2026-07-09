@@ -45,6 +45,9 @@ class MainActivity : AppCompatActivity() {
         sharedPreferences = getSharedPreferences("BrowserSettings", MODE_PRIVATE)
         currentZoom = sharedPreferences.getFloat("zoomScale", 1.0f)
 
+        // 啟用 WebView 偵錯以支援 Chrome Inspect
+        WebView.setWebContentsDebuggingEnabled(true)
+
         // 設定 WebView
         webView.isNestedScrollingEnabled = true
         val webSettings = webView.settings
@@ -56,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         webSettings.displayZoomControls = false
         webSettings.useWideViewPort = true
         webSettings.loadWithOverviewMode = true
+        webSettings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
         
         // 允許混合內容 (解決 HTTPS 載入 HTTP 圖片問題)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -169,7 +173,6 @@ class MainActivity : AppCompatActivity() {
 
                         // 2. 攔截 XMLHttpRequest (用於 HTTP POST/AMF3)
                         const originalOpen = XMLHttpRequest.prototype.open;
-                        const originalSend = XMLHttpRequest.prototype.send;
                         XMLHttpRequest.prototype.open = function() {
                             if (arguments[1] && typeof arguments[1] === 'string' && arguments[1].includes('avatar')) {
                                 arguments[1] = "about:blank"; // 放棄頭像載入
@@ -177,36 +180,6 @@ class MainActivity : AppCompatActivity() {
                             this._url = arguments[1];
                             this._method = arguments[0];
                             return originalOpen.apply(this, arguments);
-                        };
-                        
-                        XMLHttpRequest.prototype.send = function(data) {
-                            const reqUrl = this._url;
-                            const method = this._method;
-                            
-                            if (data) {
-                                if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
-                                    const buf = data.buffer || data;
-                                } else if (data instanceof Blob) {
-                                    const reader = new FileReader();
-                                    const self = this;
-                                    reader.onload = function() {
-                                    };
-                                    reader.readAsArrayBuffer(data);
-                                } else {
-                                }
-                            } else {
-                            }
-
-                            this.addEventListener('load', () => {
-                                try {
-                                    if (this.responseType === 'arraybuffer' || this.responseType === 'blob') {
-                                    } else {
-                                    }
-                                } catch(e) {
-                                }
-                            });
-
-                            return originalSend.apply(this, arguments);
                         };
 
                         // 3. 攔截 Fetch 並應用 AMF3 封包修復器
@@ -684,38 +657,7 @@ class MainActivity : AppCompatActivity() {
                                     return originalFetch.call(window, resource, init);
                                 })();
                             }
-                            
-
-                            // 非同步擷取請求 Body (唯獨記錄用)
-                            if (resource && resource instanceof Request) {
-                                try {
-                                    const clone = resource.clone();
-                                    clone.arrayBuffer().then(buf => {
-                                        if (buf.byteLength > 0) {
-                                        }
-                                    }).catch(e => {
-                                    });
-                                } catch(e) {}
-                            } else if (init && init.body) {
-                                let body = init.body;
-                                if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
-                                    const buf = body.buffer || body;
-                                } else {
-                                }
-                            }
-
-                            return originalFetch.apply(this, arguments).then(response => {
-                                try {
-                                    const clone = response.clone();
-                                    clone.arrayBuffer().then(buf => {
-                                        if (buf.byteLength > 0) {
-                                        }
-                                    }).catch(e => {});
-                                } catch(e) {}
-                                return response;
-                            }).catch(err => {
-                                throw err;
-                            });
+                            return originalFetch.apply(this, arguments);
                         };
 
                     })();
@@ -920,6 +862,7 @@ class MainActivity : AppCompatActivity() {
                     autoplay: "on",
                     unmuteOverlay: "hidden",
                     splashScreen: false, // 關閉 Ruffle 頭像/啟動畫面
+                    quality: "low", // 降低向量渲染畫質以提升流暢度並降低耗電/發熱
                     fontSources: ["https://cdn.jsdelivr.net/gh/lxgw/LxgwWenKai-Lite@main/fonts/TTF/LXGWWenKaiLite-Regular.ttf"],
                     defaultFonts: {
                         sans: ["LXGW WenKai Lite", "LXGW WenKai Lite Regular", "sans"],
