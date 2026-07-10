@@ -18,7 +18,7 @@
 
 由於本 APP 尚未上架 Google Play 商店，請透過以下步驟手動安裝：
 
-1. **下載 APK 檔案**：請至 [GitHub Releases 頁面](https://github.com/kevin-leeeeee/FlashBrowser/releases/tag/v1.0.4) 下載最新版本的 `app-debug.apk`（或直接點擊 [這裡下載 APK](https://github.com/kevin-leeeeee/FlashBrowser/releases/download/v1.0.4/app-debug.apk)）。
+1. **下載 APK 檔案**：請至 [GitHub Releases 頁面](https://github.com/kevin-leeeeee/FlashBrowser/releases) 下載最新版本的 `app-debug.apk`（或直接點擊 [這裡下載 APK](https://github.com/kevin-leeeeee/FlashBrowser/releases/latest/download/app-debug.apk)）。
 2. **允許安裝**：
    * 點擊下載好的檔案進行安裝。
    * 如果系統提示「已封鎖不明來源的應用程式」，請點擊 **「設定」**，並開啟 **「允許這個來源的應用程式」**。
