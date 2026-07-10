@@ -56,4 +56,4 @@ A2：本 APP 僅作為 Flash 遊戲執行環境與必要的網路通訊優化，
 
 ---
 
-> 💡 **給開發者**：如果您需要查看技術細節、代碼架構或自行修改預設網址，請參考 [DEVELOPER.md](file:///c:/Users/HP_600_G1_2ND/Desktop/FlashBrowser/DEVELOPER.md)。
+> 💡 **給開發者**：如果您需要查看技術細節、代碼架構或自行修改預設網址，請參考 [DEVELOPER.md](DEVELOPER.md)。
