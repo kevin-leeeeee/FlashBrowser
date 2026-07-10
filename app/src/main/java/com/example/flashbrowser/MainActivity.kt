@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 設定 WebView
+        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
         webView.isNestedScrollingEnabled = true
         val webSettings = webView.settings
         webSettings.javaScriptEnabled = true
@@ -768,7 +769,10 @@ class MainActivity : AppCompatActivity() {
             sharedPreferences.edit().putBoolean("performanceMode", isPerformanceMode).apply()
             updatePerformanceUI()
             
-            val msg = if (isPerformanceMode) "已開啟流暢模式 (效能提升，耗電較快)" else "已開啟省電模式 (降低耗電與發燙，網頁可能較卡)"
+            // 重新載入網頁以套用全新的 Ruffle 畫質設定
+            webView.reload()
+            
+            val msg = if (isPerformanceMode) "已開啟流暢模式，正在重新整理網頁..." else "已開啟省電模式 (降低畫質與發熱)，正在重新整理網頁..."
             android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
         }
 
@@ -780,10 +784,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePerformanceUI() {
         if (isPerformanceMode) {
-            webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
             btnPerformance.setColorFilter(android.graphics.Color.parseColor("#FF9800"))
         } else {
-            webView.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
             btnPerformance.setColorFilter(android.graphics.Color.parseColor("#999999"))
         }
     }
@@ -833,6 +835,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun injectRuffle(view: WebView?) {
+        val qualityStr = if (isPerformanceMode) "high" else "low"
         // 這段 JS 會在網頁中動態插入 Ruffle 的腳本，並啟動模擬器
         val js = """
             javascript:(function() {
@@ -844,7 +847,7 @@ class MainActivity : AppCompatActivity() {
                     document.head.appendChild(meta);
                 }
                 meta.setAttribute('content', 'width=device-width, initial-scale=1.0, minimum-scale=0.01, maximum-scale=5.0, user-scalable=yes');
-
+ 
                 // 攔截 Socket 連線
                 const OriginalWebSocket = window.WebSocket;
                 const WebSocketProxy = function(url, protocols) {
@@ -863,7 +866,7 @@ class MainActivity : AppCompatActivity() {
                         detail = detail.replace(/\0/g, '');
                         return originalSend.apply(this, arguments);
                     };
-
+ 
                     ws.addEventListener('message', (event) => {
                         let detail = '';
                         if (event.data instanceof ArrayBuffer) {
@@ -875,12 +878,12 @@ class MainActivity : AppCompatActivity() {
                         }
                         detail = detail.replace(/\0/g, '');
                     });
-
+ 
                     return ws;
                 };
                 WebSocketProxy.prototype = OriginalWebSocket.prototype;
                 window.WebSocket = WebSocketProxy;
-
+ 
                 if (window.ruffleInjected) return;
                 window.ruffleInjected = true;
                 
@@ -889,7 +892,7 @@ class MainActivity : AppCompatActivity() {
                     autoplay: "on",
                     unmuteOverlay: "hidden",
                     splashScreen: false, // 關閉 Ruffle 頭像/啟動畫面
-                    quality: "low", // 降低向量渲染畫質以提升流暢度並降低耗電/發熱
+                    quality: "$qualityStr", // 降低向量渲染畫質以提升流暢度並降低耗電/發熱
                     fontSources: ["https://cdn.jsdelivr.net/gh/lxgw/LxgwWenKai-Lite@main/fonts/TTF/LXGWWenKaiLite-Regular.ttf"],
                     defaultFonts: {
                         sans: ["LXGW WenKai Lite", "LXGW WenKai Lite Regular", "sans"],
@@ -897,7 +900,7 @@ class MainActivity : AppCompatActivity() {
                         typewriter: ["LXGW WenKai Lite", "LXGW WenKai Lite Regular", "typewriter"]
                     }
                 };
-
+ 
                 var script = document.createElement('script');
                 script.src = 'https://unpkg.com/@ruffle-rs/ruffle';
                 document.head.appendChild(script);
