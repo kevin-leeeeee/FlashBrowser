@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 設定 WebView
+        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
         webView.isNestedScrollingEnabled = true
         val webSettings = webView.settings
         webSettings.javaScriptEnabled = true
