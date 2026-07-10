@@ -45,8 +45,10 @@ class MainActivity : AppCompatActivity() {
         sharedPreferences = getSharedPreferences("BrowserSettings", MODE_PRIVATE)
         currentZoom = sharedPreferences.getFloat("zoomScale", 1.0f)
 
-        // 啟用 WebView 偵錯以支援 Chrome Inspect
-        WebView.setWebContentsDebuggingEnabled(true)
+        // 僅在 App 處於可偵錯狀態（Debug）下，才啟用 WebView 遠端偵錯以支援 Chrome Inspect
+        if (0 != (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
         // 設定 WebView
         webView.isNestedScrollingEnabled = true
