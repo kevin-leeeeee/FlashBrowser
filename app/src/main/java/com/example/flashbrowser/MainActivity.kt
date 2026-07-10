@@ -24,6 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnReload: ImageButton
     private lateinit var btnZoomIn: ImageButton
     private lateinit var btnZoomOut: ImageButton
+    private lateinit var btnPerformance: ImageButton
+    private var isPerformanceMode = true
     private val homeUrl = "https://tdsheep.tdsheepvillage.com/"
     private var currentZoom = 1.0f
     private lateinit var sharedPreferences: android.content.SharedPreferences
@@ -51,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 設定 WebView
-        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
         webView.isNestedScrollingEnabled = true
         val webSettings = webView.settings
         webSettings.javaScriptEnabled = true
@@ -758,9 +759,32 @@ class MainActivity : AppCompatActivity() {
             applyJsZoom()
         }
 
+        btnPerformance = findViewById(R.id.btnPerformance)
+        isPerformanceMode = sharedPreferences.getBoolean("performanceMode", true)
+        updatePerformanceUI()
+
+        btnPerformance.setOnClickListener {
+            isPerformanceMode = !isPerformanceMode
+            sharedPreferences.edit().putBoolean("performanceMode", isPerformanceMode).apply()
+            updatePerformanceUI()
+            
+            val msg = if (isPerformanceMode) "已開啟流暢模式 (效能提升，耗電較快)" else "已開啟省電模式 (降低耗電與發燙，網頁可能較卡)"
+            android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+        }
+
         // 載入預設進入頁面 (首頁)
         if (savedInstanceState == null) {
             webView.loadUrl(homeUrl)
+        }
+    }
+
+    private fun updatePerformanceUI() {
+        if (isPerformanceMode) {
+            webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+            btnPerformance.setColorFilter(android.graphics.Color.parseColor("#FF9800"))
+        } else {
+            webView.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
+            btnPerformance.setColorFilter(android.graphics.Color.parseColor("#999999"))
         }
     }
 

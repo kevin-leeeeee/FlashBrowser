@@ -90,6 +90,15 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="放大網頁" />
 
+            <ImageButton
+                android:id="@+id/btnPerformance"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_speed"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="切換效能模式" />
+
         </LinearLayout>
 
         <!-- 加入一條精細的底部分割線 -->
